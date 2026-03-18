@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electricity Bill Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <form class="bill">
+        <label>Bill No:</label>
+        <input type="text" id="billno">
+        <br>
+        <label>Customer Name:</label>
+        <input type="text" id="customername">
+        <br>
+        <label>Previous Units:</label>
+        <input type="number" id="previous" min="0" step="0.01" oninput="calculate()">
+        <br>
+        <label>Current Units:</label>
+        <input type="number" id="current" min="0" step="0.01" oninput="calculate()">
+        <br>
+        <label>Units:</label>
+        <input type="number" id="units" readonly>
+        <br>
+        <label>Amount (₹):</label>
+        <input type="number" id="amount" readonly step="0.01">
+        <br>
+        <label>Subcharge (10%):</label>
+        <input type="number" id="subcharge" readonly step="0.01">
+        <br>
+        <label>Total (₹):</label>
+        <input type="number" id="total" readonly step="0.01">
+        <br>
+        <button type="button" id="clearBtn" onclick="clearAll()"> Clear All</button>
+    </form>
+    <script src="script.js"></script>
+</body>
+</html>

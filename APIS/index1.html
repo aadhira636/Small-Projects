@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Countries by Continent & Subregion</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #continentSelect, #subregionSelect { padding: 8px; margin-bottom: 16px; margin-right: 10px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f4f4f4; }
+  </style>
+</head>
+<body>
+
+<h2>Countries by Continent & Subregion</h2>
+
+<label>Continent: </label>
+<select id="continentSelect">
+  <option value="">All continents</option>
+</select>
+
+<label>Subregion: </label>
+<select id="subregionSelect">
+  <option value="">All subregions</option>
+</select>
+
+<table id="countriesTable">
+  <thead>
+    <tr>
+      <th>Continent</th>
+      <th>Subregion</th>
+      <th>Country</th>
+      <th>Capital</th>
+      <th>Currencies</th>
+    </tr>
+  </thead>
+  <tbody id="tableBody"></tbody>
+</table>
+
+<script>
+  const apiUrlCountries = "https://restcountries.com/v3.1/all?fields=name,capital,currencies,region,subregion";
+
+  let allCountries = [];
+
+  async function fetchCountries() {
+    try {
+      const response = await fetch(apiUrlCountries);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      allCountries = await response.json();
+      populateContinentsDropdown();
+      renderTableAndSubregionsDropdown(); // show all by default
+
+    } catch (err) {
+      console.error("Fetch error:", err);
+      document.body.innerHTML += `<p>Error: ${err.message}</p>`;
+    }
+  }
+
+  function populateContinentsDropdown() {
+    const select = document.getElementById("continentSelect");
+    const regions = new Set(allCountries.map(c => c.region || "Other"));
+
+    select.innerHTML = "";
+    const optionAll = document.createElement("option");
+    optionAll.value = "";
+    optionAll.textContent = "All continents";
+    select.appendChild(optionAll);
+
+    for (const region of regions) {
+      const option = document.createElement("option");
+      option.value = region;
+      option.textContent = region;
+      select.appendChild(option);
+    }
+  }
+
+  function populateSubregionsDropdown() {
+    const continentSelect = document.getElementById("continentSelect");
+    const subregionSelect = document.getElementById("subregionSelect");
+    const selectedRegion = continentSelect.value;
+
+    const regionCountries = selectedRegion === ""
+      ? allCountries
+      : allCountries.filter(c => (c.region || "Other") === selectedRegion);
+
+    const subregions = new Set(regionCountries.map(c => c.subregion || "n/a"));
+
+    subregionSelect.innerHTML = "";
+    const optionAll = document.createElement("option");
+    optionAll.value = "";
+    optionAll.textContent = "All subregions";
+    subregionSelect.appendChild(optionAll);
+
+    for (const subregion of subregions) {
+      const option = document.createElement("option");
+      option.value = subregion;
+      option.textContent = subregion;
+      subregionSelect.appendChild(option);
+    }
+  }
+
+  function renderTableAndSubregionsDropdown() {
+    populateSubregionsDropdown();
+    renderTable();
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById("tableBody");
+    const continentSelect = document.getElementById("continentSelect");
+    const subregionSelect = document.getElementById("subregionSelect");
+
+    const selectedRegion    = continentSelect.value;
+    const selectedSubregion = subregionSelect.value;
+
+    let filtered = allCountries;
+
+    if (selectedRegion !== "") {
+      filtered = filtered.filter(c => (c.region || "Other") === selectedRegion);
+    }
+    if (selectedSubregion !== "") {
+      filtered = filtered.filter(c => (c.subregion || "n/a") === selectedSubregion);
+    }
+
+    tbody.innerHTML = "";
+
+    filtered.forEach(country => {
+      const tr = document.createElement("tr");
+
+      const continentCell = document.createElement("td");
+      const subregionCell = document.createElement("td");
+      const countryCell    = document.createElement("td");
+      const capitalCell    = document.createElement("td");
+      const currencyCell   = document.createElement("td");
+
+      continentCell.textContent = country.region || "Other";
+      subregionCell.textContent = country.subregion || "n/a";
+      countryCell.textContent = country.name?.common || "n/a";
+
+      const capital = country.capital?.[0] || "n/a";
+      capitalCell.textContent = capital;
+
+      const currencies = [];
+      if (country.currencies) {
+        for (const code in country.currencies) {
+          const cur = country.currencies[code];
+          const name   = cur.name || code;
+          const symbol = cur.symbol || "";
+          currencies.push(`${name} (${symbol})`);
+        }
+      }
+      currencyCell.textContent = currencies.length > 0 ? currencies.join(", ") : "n/a";
+
+      tr.appendChild(continentCell);
+      tr.appendChild(subregionCell);
+      tr.appendChild(countryCell);
+      tr.appendChild(capitalCell);
+      tr.appendChild(currencyCell);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  // On page load
+  document.addEventListener("DOMContentLoaded", () => {
+    fetchCountries();
+
+    // Update subregion dropdown + table when continent changes
+    document.getElementById("continentSelect").addEventListener("change", () => {
+      renderTableAndSubregionsDropdown();
+    });
+
+    // Update table when subregion changes
+    document.getElementById("subregionSelect").addEventListener("change", () => {
+      renderTable();
+    });
+  });
+</script>
+
+</body>
+</html>
